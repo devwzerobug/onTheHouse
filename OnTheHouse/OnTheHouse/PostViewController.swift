@@ -19,9 +19,8 @@ class PostViewController: UIViewController {
     @IBOutlet weak var userName: UILabel!
     @IBOutlet weak var postTitle: UILabel!
     @IBOutlet weak var postDescription: UITextView!
+    @IBOutlet weak var messageButton: UIButton!
     var theCoordinates: CLLocationCoordinate2D?
-
-    
     
     //The current post that is being displayed
     var post = Post()
@@ -29,19 +28,26 @@ class PostViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         fillPostInfo()
         fillUserInfo()
         fillMapInfo()
     }
     
+    @IBAction func messageUserPressed(_ sender: Any) {
+        performSegue(withIdentifier: "message", sender: self.user)
+    }
+
     
     func fillPostInfo(){
             postTitle.text! = post.title!
             postDescription.text! = post.theDescription!
             postPicture.downloadImage(from: post.pathToImage)
     }
-    
+
+    var user = User()
+
+
     func fillMapInfo(){
         let location = post.location
         let geocoder = CLGeocoder()
@@ -62,10 +68,15 @@ class PostViewController: UIViewController {
     func fillUserInfo(){
         let uid = post.userID!
         let ref = FIRDatabase.database().reference()
+        
         ref.child("users").child(uid).observeSingleEvent(of: .value, with: { (snapshot) in
             if let dictionary = snapshot.value as?  [String: AnyObject]{
+                self.user.email = dictionary["email"] as? String
+                self.user.name = dictionary["name"] as? String
+                self.user.uid = dictionary["uid"] as? String
+                self.user.profilePicture = dictionary["profilePicture"] as? String
+
                 self.userName.text = dictionary["name"] as? String
-                
                 let databaseProfilePic = dictionary["profilePicture"] as? String
                 let data = NSData(contentsOf: NSURL(string: databaseProfilePic!) as! URL)
                 self.setProfilePicture(imageView: self.userPicture, imageToSet: UIImage(data:data! as Data)!)
@@ -83,6 +94,13 @@ class PostViewController: UIViewController {
         imageView.layer.masksToBounds = true
         imageView.image = imageToSet
     }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let destination = segue.destination as? MessageCollectionViewController{
+            destination.toUser = user
+        }
+    }
+    
     
     
     

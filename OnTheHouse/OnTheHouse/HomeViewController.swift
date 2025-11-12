@@ -24,9 +24,7 @@ class HomeViewController: UIViewController , UICollectionViewDelegate, UICollect
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
         posts.removeAll()
-
         fetchPosts()
-        
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
@@ -40,6 +38,16 @@ class HomeViewController: UIViewController , UICollectionViewDelegate, UICollect
     
     @IBAction func postItemPressed(_ sender: Any) {
         let vc = self.storyboard?.instantiateViewController(withIdentifier: "createPost")
+        self.present(vc!, animated: true, completion: nil)
+    }
+    
+    @IBAction func messagesButtonPressed(_ sender: Any) {
+        let vc = self.storyboard?.instantiateViewController(withIdentifier: "messageLog")
+        self.present(vc!, animated: true, completion: nil)
+    }
+    
+    @IBAction func categoriesButtonPressed(_ sender: Any) {
+        let vc = self.storyboard?.instantiateViewController(withIdentifier: "categories")
         self.present(vc!, animated: true, completion: nil)
     }
     
@@ -62,30 +70,34 @@ class HomeViewController: UIViewController , UICollectionViewDelegate, UICollect
     func fetchPosts(){
         let ref = FIRDatabase.database().reference()
                         ref.child("posts").queryOrderedByKey().observeSingleEvent(of: .value, with: {(snap) in
-                        let postsSnap = snap.value as! [String: AnyObject]
+                        let postsSnap = snap.value as? [String: AnyObject]
                         //this gets all the posts and puts it in posts array
+                            
+                        if (postsSnap?.count != nil){
                         
-                        for(_,post) in postsSnap {
-                            if let uid = post["userID"] as? String{
-                                    let thePost = Post()
-                                    if let description = post["description"] as? String,
-                                        let postID = post["postID"] as? String,
-                                        let pathToImage = post["pathToImage"] as? String,
-                                        let title = post["title"] as? String,
-                                        let location = post["location"] as? String{
+                            for(_,post) in postsSnap! {
+                                if let uid = post["userID"] as? String{
+                                        let thePost = Post()
+                                        if let description = post["description"] as? String,
+                                            let postID = post["postID"] as? String,
+                                            let pathToImage = post["pathToImage"] as? String,
+                                            let title = post["title"] as? String,
+                                            let location = post["location"] as? String{
                                         
-                                        thePost.theDescription = description
-                                        thePost.postID = postID
-                                        thePost.pathToImage = pathToImage
-                                        thePost.title = title
-                                        thePost.userID = uid
-                                        thePost.location = location
+                                            thePost.theDescription = description
+                                            thePost.postID = postID
+                                            thePost.pathToImage = pathToImage
+                                            thePost.title = title
+                                            thePost.userID = uid
+                                            thePost.location = location
                                         
-                                        self.posts.append(thePost)
-                                    }
-                            self.collectionView.reloadData()
+                                            self.posts.append(thePost)
+                                        }
+                                    self.collectionView.reloadData()
+                                }
+                    
+                            }
                         }
-                    }
                 })
               ref.removeAllObservers()
             }
